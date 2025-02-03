@@ -1,87 +1,103 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ricerca Abitudini</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f5f5f5;
-      color: #333;
-    }
-    h1 {
-      color: #0056b3;
-    }
-    select, button {
-      font-size: 16px;
-      padding: 8px;
-      margin-top: 10px;
-    }
-    button {
-      cursor: pointer;
-      background-color: #0056b3;
-      color: #fff;
-      border: none;
-    }
-    button:hover {
-      background-color: #003d80;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HabitHacker - Traccia le tue Abitudini</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .habit-list {
+            text-align: left;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #218838;
+        }
+    </style>
 </head>
 <body>
-  <h1>Informazioni sulle Abitudini</h1>
-  <p>Seleziona un'abitudine per saperne di più:</p>
-  <select id="habit">
-    <option value="Fumo">Fumo</option>
-    <option value="Alcol">Alcol</option>
-    <option value="Dieta">Dieta</option>
-    <option value="Esercizio fisico">Esercizio fisico</option>
-    <option value="Sonno">Sonno</option>
-  </select>
-  <br>
-  <button onclick="searchHabit()">Cerca</button>
-  
-  <div id="result"></div>
-  
-  <script>
-    function searchHabit() {
-      const habit = document.getElementById('habit').value;
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = "<p>Caricamento...</p>";
-      
-      // Costruzione dell'URL per la richiesta alla Wikipedia italiana
-      const url = 'https://it.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(habit);
-      
-      fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Errore nella risposta della rete");
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.extract) {
-            resultDiv.innerHTML = `
-              <h2>${data.title}</h2>
-              <p>${data.extract}</p>
-            `;
-          } else {
-            resultDiv.innerHTML = "<p>Nessuna informazione trovata.</p>";
-          }
-        })
-        .catch(error => {
-          resultDiv.innerHTML = `<p>Si è verificato un errore: ${error}</p>`;
+    <div class="container">
+        <h1>HabitHacker</h1>
+        <p>Monitora e migliora le tue abitudini quotidiane!</p>
+        <h2>Le tue abitudini</h2>
+        <ul class="habit-list" id="habit-list"></ul>
+        <button onclick="addHabit()">Aggiungi Abitudine</button>
+        <canvas id="progressChart"></canvas>
+    </div>
+    
+    <script>
+        let habits = JSON.parse(localStorage.getItem('habits')) || [
+            { name: "Bere 2L d'acqua", progress: 70 },
+            { name: "Esercizio fisico", progress: 50 },
+            { name: "Meditazione", progress: 40 },
+            { name: "Studio 1h al giorno", progress: 80 }
+        ];
+
+        function renderHabits() {
+            const habitList = document.getElementById("habit-list");
+            habitList.innerHTML = "";
+            habits.forEach((habit, index) => {
+                habitList.innerHTML += `<li>${habit.name} - Progresso: ${habit.progress}% <button onclick="updateProgress(${index})">+10%</button></li>`;
+            });
+            updateChart();
+            localStorage.setItem('habits', JSON.stringify(habits));
+        }
+
+        function addHabit() {
+            const habitName = prompt("Inserisci una nuova abitudine:");
+            if (habitName) {
+                habits.push({ name: habitName, progress: 0 });
+                renderHabits();
+            }
+        }
+
+        function updateProgress(index) {
+            habits[index].progress = Math.min(100, habits[index].progress + 10);
+            renderHabits();
+        }
+
+        let ctx = document.getElementById("progressChart").getContext("2d");
+        let chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: habits.map(h => h.name),
+                datasets: [{
+                    label: "Progresso (%)",
+                    data: habits.map(h => h.progress),
+                    backgroundColor: "#28a745"
+                }]
+            },
+            options: { responsive: true }
         });
-    }
-  </script>
+
+        function updateChart() {
+            chart.data.labels = habits.map(h => h.name);
+            chart.data.datasets[0].data = habits.map(h => h.progress);
+            chart.update();
+        }
+
+        renderHabits();
+    </script>
 </body>
 </html>
