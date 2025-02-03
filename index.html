@@ -96,102 +96,104 @@
     </div>
 
     <script>
-        let habits = JSON.parse(localStorage.getItem('habits')) || [
-            { name: "Bere 2L d'acqua", progress: 70, color: "#28a745" },
-            { name: "Esercizio fisico", progress: 50, color: "#007bff" },
-            { name: "Meditazione", progress: 40, color: "#ff9800" },
-            { name: "Studio 1h al giorno", progress: 80, color: "#9c27b0" }
-        ];
+        // Funzione che esegue il rendering dell'app
+        function initializeApp() {
+            if (typeof(Storage) !== "undefined") {
+                // Utilizzare localStorage solo se disponibile
+                let habits = JSON.parse(localStorage.getItem('habits')) || [
+                    { name: "Bere 2L d'acqua", progress: 70, color: "#28a745" },
+                    { name: "Esercizio fisico", progress: 50, color: "#007bff" },
+                    { name: "Meditazione", progress: 40, color: "#ff9800" },
+                    { name: "Studio 1h al giorno", progress: 80, color: "#9c27b0" }
+                ];
 
-        function renderHabits() {
-            const habitList = document.getElementById("habit-list");
-            habitList.innerHTML = "";
-            habits.forEach((habit, index) => {
-                habitList.innerHTML += `
-                    <li>
-                        <span>${habit.name} - Progresso: ${habit.progress}%</span>
-                        <button class="increment" onclick="updateProgress(${index})">+10%</button>
-                        <button class="decrement" onclick="decreaseProgress(${index})">-10%</button>
-                        <button class="remove" onclick="removeHabit(${index})">Rimuovi</button>
-                        <button onclick="editHabit(${index})">Modifica</button>
-                    </li>`;
-            });
-            updateChart();
-            localStorage.setItem('habits', JSON.stringify(habits));
-        }
+                function renderHabits() {
+                    const habitList = document.getElementById("habit-list");
+                    habitList.innerHTML = "";
+                    habits.forEach((habit, index) => {
+                        habitList.innerHTML += `
+                            <li>
+                                <span>${habit.name} - Progresso: ${habit.progress}%</span>
+                                <button class="increment" onclick="updateProgress(${index})">+10%</button>
+                                <button class="decrement" onclick="decreaseProgress(${index})">-10%</button>
+                                <button class="remove" onclick="removeHabit(${index})">Rimuovi</button>
+                            </li>`;
+                    });
+                    updateChart();
+                    localStorage.setItem('habits', JSON.stringify(habits));
+                }
 
-        function addHabit() {
-            const habitName = prompt("Inserisci una nuova abitudine:");
-            if (habitName) {
-                habits.push({ name: habitName, progress: 0, color: "#28a745" });
-                renderHabits();
-            }
-        }
-
-        function updateProgress(index) {
-            habits[index].progress = Math.min(100, habits[index].progress + 10);
-            renderHabits();
-        }
-
-        function decreaseProgress(index) {
-            habits[index].progress = Math.max(0, habits[index].progress - 10);
-            renderHabits();
-        }
-
-        function editHabit(index) {
-            const newName = prompt("Modifica nome abitudine:", habits[index].name);
-            const newProgress = parseInt(prompt("Imposta il progresso:", habits[index].progress), 10);
-            if (newName) habits[index].name = newName;
-            if (!isNaN(newProgress)) habits[index].progress = newProgress;
-            renderHabits();
-        }
-
-        function removeHabit(index) {
-            habits.splice(index, 1);
-            renderHabits();
-        }
-
-        let ctx = document.getElementById("progressChart").getContext("2d");
-        let chart = new Chart(ctx, {
-            type: "bar", // Impostato come grafico a barre per default
-            data: {
-                labels: habits.map(h => h.name),
-                datasets: [{
-                    label: "Progresso (%)",
-                    data: habits.map(h => h.progress),
-                    backgroundColor: habits.map(h => h.color),
-                    borderRadius: 5,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        ticks: {
-                            autoSkip: true,
-                            maxTicksLimit: 5
-                        }
-                    },
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: {
-                            stepSize: 10
-                        }
+                function addHabit() {
+                    const habitName = prompt("Inserisci una nuova abitudine:");
+                    if (habitName) {
+                        habits.push({ name: habitName, progress: 0, color: "#28a745" });
+                        renderHabits();
                     }
                 }
-            }
-        });
 
-        function updateChart() {
-            chart.data.labels = habits.map(h => h.name);
-            chart.data.datasets[0].data = habits.map(h => h.progress);
-            chart.data.datasets[0].backgroundColor = habits.map(h => h.color);
-            chart.update();
+                function updateProgress(index) {
+                    habits[index].progress = Math.min(100, habits[index].progress + 10);
+                    renderHabits();
+                }
+
+                function decreaseProgress(index) {
+                    habits[index].progress = Math.max(0, habits[index].progress - 10);
+                    renderHabits();
+                }
+
+                function removeHabit(index) {
+                    habits.splice(index, 1);
+                    renderHabits();
+                }
+
+                let ctx = document.getElementById("progressChart").getContext("2d");
+                let chart = new Chart(ctx, {
+                    type: "bar", // Impostato come grafico a barre per default
+                    data: {
+                        labels: habits.map(h => h.name),
+                        datasets: [{
+                            label: "Progresso (%)",
+                            data: habits.map(h => h.progress),
+                            backgroundColor: habits.map(h => h.color),
+                            borderRadius: 5,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: 5
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    stepSize: 10
+                                }
+                            }
+                        }
+                    }
+                });
+
+                function updateChart() {
+                    chart.data.labels = habits.map(h => h.name);
+                    chart.data.datasets[0].data = habits.map(h => h.progress);
+                    chart.data.datasets[0].backgroundColor = habits.map(h => h.color);
+                    chart.update();
+                }
+
+                renderHabits();
+            } else {
+                alert("Il tuo browser non supporta localStorage.");
+            }
         }
 
-        renderHabits();
+        // Carica l'app quando la pagina è pronta
+        window.onload = initializeApp;
     </script>
 </body>
 </html>
