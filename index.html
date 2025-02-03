@@ -41,15 +41,29 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
         }
         .habit-list button {
-            background: #28a745;
             color: white;
             border: none;
             padding: 5px 15px;
             cursor: pointer;
             border-radius: 5px;
         }
-        .habit-list button:hover {
+        .habit-list button.increment {
+            background: #28a745; /* verde per incremento */
+        }
+        .habit-list button.increment:hover {
             background: #218838;
+        }
+        .habit-list button.decrement {
+            background: #dc3545; /* rosso per decremento */
+        }
+        .habit-list button.decrement:hover {
+            background: #c82333;
+        }
+        .habit-list button.remove {
+            background: #007bff;
+        }
+        .habit-list button.remove:hover {
+            background: #0056b3;
         }
         canvas {
             margin-top: 30px;
@@ -81,13 +95,12 @@
 
     <script>
         let habits = JSON.parse(localStorage.getItem('habits')) || [
-            { name: "Bere 2L d'acqua", progress: 70 },
-            { name: "Esercizio fisico", progress: 50 },
-            { name: "Meditazione", progress: 40 },
-            { name: "Studio 1h al giorno", progress: 80 }
+            { name: "Bere 2L d'acqua", progress: 70, color: "#28a745" },
+            { name: "Esercizio fisico", progress: 50, color: "#007bff" },
+            { name: "Meditazione", progress: 40, color: "#ff9800" },
+            { name: "Studio 1h al giorno", progress: 80, color: "#9c27b0" }
         ];
 
-        // Funzione per visualizzare le abitudini
         function renderHabits() {
             const habitList = document.getElementById("habit-list");
             habitList.innerHTML = "";
@@ -95,38 +108,56 @@
                 habitList.innerHTML += `
                     <li>
                         <span>${habit.name} - Progresso: ${habit.progress}%</span>
-                        <button onclick="updateProgress(${index})">+10%</button>
+                        <button class="increment" onclick="updateProgress(${index})">+10%</button>
+                        <button class="decrement" onclick="decreaseProgress(${index})">-10%</button>
+                        <button class="remove" onclick="removeHabit(${index})">Rimuovi</button>
+                        <button onclick="editHabit(${index})">Modifica</button>
                     </li>`;
             });
             updateChart();
             localStorage.setItem('habits', JSON.stringify(habits));
         }
 
-        // Funzione per aggiungere una nuova abitudine
         function addHabit() {
             const habitName = prompt("Inserisci una nuova abitudine:");
             if (habitName) {
-                habits.push({ name: habitName, progress: 0 });
+                habits.push({ name: habitName, progress: 0, color: "#28a745" });
                 renderHabits();
             }
         }
 
-        // Funzione per aggiornare il progresso di un'abitudine
         function updateProgress(index) {
             habits[index].progress = Math.min(100, habits[index].progress + 10);
             renderHabits();
         }
 
-        // Inizializzazione del grafico
+        function decreaseProgress(index) {
+            habits[index].progress = Math.max(0, habits[index].progress - 10);
+            renderHabits();
+        }
+
+        function editHabit(index) {
+            const newName = prompt("Modifica nome abitudine:", habits[index].name);
+            const newProgress = parseInt(prompt("Imposta il progresso:", habits[index].progress), 10);
+            if (newName) habits[index].name = newName;
+            if (!isNaN(newProgress)) habits[index].progress = newProgress;
+            renderHabits();
+        }
+
+        function removeHabit(index) {
+            habits.splice(index, 1);
+            renderHabits();
+        }
+
         let ctx = document.getElementById("progressChart").getContext("2d");
         let chart = new Chart(ctx, {
-            type: 'bar',
+            type: "bar", // Impostato come grafico a barre per default
             data: {
                 labels: habits.map(h => h.name),
                 datasets: [{
                     label: "Progresso (%)",
                     data: habits.map(h => h.progress),
-                    backgroundColor: "#28a745",
+                    backgroundColor: habits.map(h => h.color),
                     borderRadius: 5,
                     borderWidth: 1
                 }]
@@ -151,10 +182,10 @@
             }
         });
 
-        // Funzione per aggiornare il grafico con le nuove abitudini
         function updateChart() {
             chart.data.labels = habits.map(h => h.name);
             chart.data.datasets[0].data = habits.map(h => h.progress);
+            chart.data.datasets[0].backgroundColor = habits.map(h => h.color);
             chart.update();
         }
 
